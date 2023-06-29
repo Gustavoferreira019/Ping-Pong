@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Jogo Ping-Pong</title>
+</head>
+
+<body>
+    <canvas></canvas>
+    <script>
+        const canvas = document.querySelector("canvas"),
+            canvasCtx = canvas.getContext("2d")
+
+
+        //Criando propriedade mouse
+        const mouse={x:0,y:0}
+
+        const lineWidth = 15 //tamanho da linha
+
+        const campo = {
+            w: window.innerWidth,
+            h: window.innerHeight,
+            draw: function () {
+                canvasCtx.fillStyle = "#286047"
+                canvasCtx.fillRect(0, 0, this.w, this.h)
+            }
+        }
+
+        const linha = {
+            w: 15,
+            h: campo.h,
+            draw: function () {
+                canvasCtx.fillStyle = "#fff"
+                canvasCtx.fillRect(campo.w / 2 - this.w / 2, 0, lineWidth, this.h)
+            }
+        }
+
+        const esqRaq = {
+            x: 10,
+            y: 600,
+            w: linha.w,
+            h: 200,
+            _move: function(){
+                this.y= mouse.y - this.h/2
+            },
+            draw: function () {
+                canvasCtx.fillStyle = "#fff"
+                canvasCtx.fillRect(this.x, this.y, this.w, this.h)
+                this._move()
+            }
+        }
+
+        const dirRaq = {
+            x: campo.w - linha.w - 10,
+            y: 200,
+            w: linha.w,
+            h: 200,
+            speed: 2,
+            _velocidadeRaq:function(){
+                this.speed += 1
+            },
+            _move: function(){
+                if(this.y + this.h/2 < bola.y + bola.r){
+                    this.y += this.speed
+                }else{
+                    this.y -= this.speed
+                }
+            },
+            draw: function () {
+                canvasCtx.fillStyle = "#fff"
+                canvasCtx.fillRect(this.x, this.y, this.w, this.h)
+                this._move()
+            }
+        }
+        const placar = {
+            humano: 0,
+            pc: 0,
+            pontoHumano: function(){
+                this.humano++
+            },
+            pontoPc: function(){
+                this.pc++
+            },
+            draw: function () {
+                canvasCtx.font = "bold 65px Arial"
+                canvasCtx.textAlign = "center"
+                canvasCtx.textBaseline = "top"
+                canvasCtx.fillStyle = '#01341D'
+                canvasCtx.fillText(this.humano, campo.w / 4, 100)
+                canvasCtx.fillText(this.pc, campo.w / 4 + campo.w / 2, 100)
+            }
+        }
+
+        const bola = {
+            x: 700,
+            y: 10,
+            r: 30,
+            sA: 0,
+            eA: 2 * Math.PI,
+            speed: 3,
+            directionX: 1,
+            directionY: 1, 
+            _calcPosition: function(){
+                if(this.x>campo.w - this.r - dirRaq.w - 15){
+                    if(this.y + this.r > dirRaq.y && this.y - this.r < dirRaq.y + dirRaq.h){
+                        this._reverseX()
+                    }else{
+                        placar.pontoHumano()
+                        this._bolaMeio()
+                    }
+                }
+
+                if(
+                (this.y - this.r < 0 && this.directionY < 0)||    
+                (this.y> campo.h - this.r && this.directionY > 0))
+                {
+                    this._reverseY()
+                }
+
+                if(this.x < this.r + esqRaq.w){
+                    if(this.y + this.r> esqRaq.y && this.y - this.r < esqRaq.y + esqRaq.h){
+                        this._reverseX()
+                    }else{
+                        placar.pontoPc()
+                        this._bolaMeio()
+                    }
+                }
+            },
+            _velocidade: function(){
+                this.speed += 1
+            },
+            _bolaMeio:function(){
+                this._velocidade()
+                dirRaq._velocidadeRaq()
+                this.x = campo.w/2
+                this.y = campo.h/2
+            },  
+            _reverseX: function(){
+                this.directionX = this.directionX * -1
+            },_reverseY: function(){
+                this.directionY = this.directionY * -1
+            },
+            _move: function () {
+                this.x += this.directionX * this.speed
+                this.y += this.directionY * this.speed
+            },
+            draw: function () {
+                canvasCtx.beginPath()
+                canvasCtx.arc(this.x, this.y, this.r, this.sA, this.eA)
+                canvasCtx.fill()
+                this._move()
+                this. _calcPosition()
+            }
+        }
+        function setup() {
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+            canvasCtx.width = window.innerWidth
+            canvasCtx.height = window.innerHeight
+        }
+
+        function draw() {
+            campo.draw()
+            linha.draw()
+            esqRaq.draw()
+            dirRaq.draw()
+            bola.draw()
+            placar.draw()
+        }
+
+        window.animateFrame = (function () {
+            return (
+                window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                function (callback) {
+                    return window.setTimeout(callback, 1000 / 60)
+                }
+            )
+        })()
+
+        function main() {
+            animateFrame(main)
+            draw()
+        }
+        setup()
+        main()
+
+        canvas.addEventListener('mousemove',function(e){
+            mouse.x = e.pageX
+            mouse.y = e.pageY
+        })
+    </script>
+</body>
+
+</html>
